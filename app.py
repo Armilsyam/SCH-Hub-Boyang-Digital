@@ -1,167 +1,260 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+import time
 
-# Mengatur konfigurasi halaman Streamlit
+# ==========================================
+# 1. KONFIGURASI HALAMAN
+# ==========================================
 st.set_page_config(
-    page_title="SCH-Hub | Climate Technopreneurship",
-    page_icon="🌱",
+    page_title="SCH-Hub | PT Boyang Digital Nusantara",
+    page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# Menyimpan kode HTML ke dalam variabel string
-html_content = """
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCH-Hub | Climate Technopreneurship by Boyang Digital Nusantara</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; margin: 0; padding: 0; }
-        .bg-gradient-green { background: linear-gradient(135deg, #047857 0%, #10b981 100%); }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+# ==========================================
+# 2. INJEKSI CSS KUSTOM (UNTUK UI YANG LUAR BIASA)
+# ==========================================
+st.markdown("""
+<style>
+    /* Global Font & Background */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Custom Gradient Text */
+    .gradient-text {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 3rem;
+    }
+    
+    /* Card Styles */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        transition: transform 0.3s ease;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.1);
+    }
+    
+    /* Founder Section Style */
+    .founder-name {
+        color: #064e3b;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 0px;
+    }
+    .founder-title {
+        color: #059669;
+        font-weight: 600;
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed w-full z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center">
-                    <span class="font-bold text-2xl text-emerald-700">SCH-Hub</span>
-                    <span class="ml-2 text-xs text-gray-500 hidden sm:block">by Boyang Digital</span>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="#masalah" class="text-gray-600 hover:text-emerald-600 font-medium">Masalah</a>
-                    <a href="#solusi" class="text-gray-600 hover:text-emerald-600 font-medium">Solusi</a>
-                    <a href="#teknologi" class="text-gray-600 hover:text-emerald-600 font-medium">Teknologi</a>
-                </div>
-                <div>
-                    <a href="mailto:contact@boyangdigital.my.id" class="bg-emerald-600 text-white px-5 py-2 rounded-full font-medium hover:bg-emerald-700 transition">Hubungi Kami</a>
-                </div>
-            </div>
+# ==========================================
+# 3. DATA DUMMY UNTUK DASHBOARD
+# ==========================================
+@st.cache_data
+def load_map_data():
+    # Simulasi titik persebaran limbah kelapa di Sulawesi Barat
+    np.random.seed(42)
+    lat = np.random.uniform(-3.5, -2.5, 100)
+    lon = np.random.uniform(118.8, 119.5, 100)
+    volume = np.random.randint(500, 5000, 100) # dalam kg
+    return pd.DataFrame({'Latitude': lat, 'Longitude': lon, 'Volume (Kg)': volume})
+
+@st.cache_data
+def load_impact_data():
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']
+    emisi = [120, 105, 90, 75, 55, 40] # Emisi menurun
+    pendapatan = [15, 22, 35, 48, 65, 85] # Pendapatan petani naik (Juta Rupiah)
+    return pd.DataFrame({'Bulan': months, 'Emisi Karbon (Ton)': emisi, 'Pendapatan Petani (Juta)': pendapatan})
+
+
+# ==========================================
+# 4. FUNGSI HALAMAN (PAGES)
+# ==========================================
+
+def page_beranda():
+    st.markdown('<h1 class="gradient-text">Strategic Coconut Hilirization Hub (SCH-Hub)</h1>', unsafe_allow_html=True)
+    st.markdown("### Ekosistem Climate Technopreneurship oleh **PT. Boyang Digital Nusantara**")
+    st.write("---")
+    
+    col1, col2 = st.columns([1.5, 1])
+    
+    with col1:
+        st.markdown("""
+        ### Mengubah Ancaman Ekologi Menjadi Nilai Ekonomi
+        Sulawesi Barat memiliki potensi perkebunan kelapa yang masif. Namun, sisa panen seperti sabut dan batok kelapa seringkali hanya dibakar, menghasilkan emisi **Gas Rumah Kaca (GRK)** yang tinggi.
+        
+        **SCH-Hub hadir sebagai jembatan digital:**
+        * 🌍 **Zero Waste Integration:** Mencegah pembakaran terbuka dengan mendistribusikan limbah ke industri bio-energi.
+        * 🤖 **AI Logistics:** Memetakan titik kumpul secara presisi untuk menekan biaya transportasi.
+        * 💰 **Circular Economy:** Memberikan insentif langsung (E-Wallet) kepada petani yang menyetorkan limbahnya.
+        """)
+        
+    with col2:
+        st.image("https://images.unsplash.com/photo-1596704017254-9b121068fb31?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", caption="Potensi Biomassa Kelapa (Ilustrasi)", use_container_width=True)
+
+    st.write("### 📈 Pencapaian Platform (Live Metrics)")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric(label="Total Biomassa Terselamatkan", value="1,245 Ton", delta="↑ 12% bulan ini")
+    m2.metric(label="Reduksi Jejak Karbon", value="450 Ton CO2e", delta="-5% dibanding pembakaran")
+    m3.metric(label="Mitra Pengepul Desa", value="128 Titik", delta="15 Desa Terintegrasi")
+    m4.metric(label="Sirkulasi Ekonomi Lokal", value="Rp 850 Juta", delta="↑ Rp 45 Juta")
+
+
+def page_teknologi():
+    st.markdown('<h1 class="gradient-text">Geo-AI & Optimasi Rantai Pasok</h1>', unsafe_allow_html=True)
+    st.write("Memonitor dan memetakan potensi energi biomassa secara *real-time* menggunakan algoritma *routing* pintar.")
+    st.write("---")
+    
+    df_map = load_map_data()
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("### 🗺️ Peta Potensi Biomassa (Sulawesi Barat)")
+        # Plotly Mapbox
+        fig = px.scatter_mapbox(df_map, lat="Latitude", lon="Longitude", size="Volume (Kg)",
+                                color="Volume (Kg)", color_continuous_scale=px.colors.sequential.Greens,
+                                size_max=15, zoom=7, mapbox_style="carto-positron")
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with col2:
+        st.markdown("### ⚙️ Sistem Kerja SCH-Hub")
+        st.markdown("""
+        <div class="glass-card">
+            <h4>1. Koleksi Data (IoT & Mobile)</h4>
+            <p style='font-size: 14px;'>Petani memindai berat limbah via aplikasi. Data masuk ke cloud secara real-time.</p>
+            <hr>
+            <h4>2. Clustering AI</h4>
+            <p style='font-size: 14px;'>Sistem mengelompokkan titik pengangkutan terdekat untuk memastikan truk selalu muat penuh (Efisiensi 30%).</p>
+            <hr>
+            <h4>3. Distribusi P2P</h4>
+            <p style='font-size: 14px;'>Pabrik briket/bio-pelet langsung menerima pasokan tanpa perantara panjang.</p>
         </div>
-    </nav>
+        """, unsafe_allow_html=True)
 
-    <!-- Hero Section -->
-    <section class="pt-32 pb-20 bg-gradient-green text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                Mengubah Limbah Kelapa Menjadi <br> <span class="text-emerald-200">Energi Masa Depan</span>
-            </h1>
-            <p class="mt-4 text-xl md:text-2xl font-light mb-10 max-w-3xl mx-auto">
-                Platform optimasi logistik dan pemetaan potensi bio-energi berbasis Artificial Intelligence untuk Ekonomi Sirkular di Sulawesi Barat dan sekitarnya.
-            </p>
-            <div class="flex justify-center gap-4">
-                <a href="#solusi" class="bg-white text-emerald-700 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition shadow-lg">Pelajari Inovasi Kami</a>
-            </div>
+
+def page_dampak():
+    st.markdown('<h1 class="gradient-text">Dampak Lingkungan & Ekonomi</h1>', unsafe_allow_html=True)
+    st.write("Harmonisasi antara *Profit* (Keuntungan), *People* (Masyarakat), dan *Planet* (Bumi).")
+    st.write("---")
+    
+    df_impact = load_impact_data()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 📉 Tren Penurunan Emisi Karbon")
+        fig1 = px.line(df_impact, x="Bulan", y="Emisi Karbon (Ton)", markers=True, 
+                       line_shape='spline', color_discrete_sequence=['#ef4444'])
+        fig1.update_traces(line=dict(width=4))
+        fig1.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig1, use_container_width=True)
+        
+    with col2:
+        st.markdown("### 📈 Tren Peningkatan Ekonomi Petani")
+        fig2 = px.bar(df_impact, x="Bulan", y="Pendapatan Petani (Juta)", text_auto=True,
+                      color="Pendapatan Petani (Juta)", color_continuous_scale="Greens")
+        fig2.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig2, use_container_width=True)
+
+
+def page_founder():
+    st.markdown('<h1 class="gradient-text">Visioner di Balik Inovasi</h1>', unsafe_allow_html=True)
+    st.write("Membangun masa depan digital yang berkelanjutan dari Sulawesi Barat untuk Nusantara.")
+    st.write("---")
+    
+    col_img, col_text = st.columns([1, 2.5])
+    
+    with col_img:
+        # Placeholder untuk foto (Bisa diganti dengan URL foto asli Pak Armil jika ada)
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 5px; border-radius: 20px;">
+            <img src="https://ui-avatars.com/api/?name=Armil+Syam&background=ffffff&color=059669&size=512" 
+                 style="width: 100%; border-radius: 15px; border: 4px solid white;">
         </div>
-    </section>
-
-    <!-- Problem Section -->
-    <section id="masalah" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Tantangan Iklim Saat Ini</h2>
-                <div class="w-24 h-1 bg-emerald-500 mx-auto rounded"></div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <div class="text-red-500 text-4xl mb-4"><i class="fas fa-smog"></i></div>
-                    <h3 class="text-xl font-bold mb-3">Emisi Karbon Tinggi</h3>
-                    <p class="text-gray-600">Praktik pembakaran terbuka limbah sisa panen kelapa (sabut dan batok) menghasilkan Gas Rumah Kaca yang signifikan.</p>
-                </div>
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <div class="text-yellow-500 text-4xl mb-4"><i class="fas fa-route"></i></div>
-                    <h3 class="text-xl font-bold mb-3">Logistik Tidak Efisien</h3>
-                    <p class="text-gray-600">Rantai pasok terfragmentasi membuat biaya angkut biomassa dari desa ke pabrik pengolahan menjadi sangat mahal.</p>
-                </div>
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <div class="text-blue-500 text-4xl mb-4"><i class="fas fa-hand-holding-usd"></i></div>
-                    <h3 class="text-xl font-bold mb-3">Potensi Ekonomi Hilang</h3>
-                    <p class="text-gray-600">Petani kehilangan peluang untuk mendapatkan nilai tambah ekonomi dari limbah yang sebenarnya bernilai tinggi.</p>
-                </div>
-            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_text:
+        st.markdown("""
+        <h2 class="founder-name">MUH. ARMIL SYAM, S.T.</h2>
+        <p class="founder-title">Founder & CEO — PT. Boyang Digital Nusantara</p>
+        <br>
+        """, unsafe_allow_html=True)
+        
+        st.write("""
+        Sebagai seorang *Data Scientist* dan teknolog yang tersertifikasi BNSP, **Muh. Armil Syam, S.T.** melihat ketimpangan besar antara inovasi teknologi di kota besar dan pemanfaatan sumber daya di daerah.
+        
+        Melalui **PT. Boyang Digital Nusantara**, beliau memelopori pendekatan *Climate Technopreneurship*. Beliau percaya bahwa menyelesaikan masalah lingkungan lokal—seperti pembakaran limbah kelapa di Sulawesi Barat—membutuhkan lebih dari sekadar sosialisasi; membutuhkan intervensi sistemik berbasis **Data, Kecerdasan Buatan (AI), dan Bisnis Sirkular**.
+        """)
+        
+        st.markdown("""
+        <div class="glass-card" style="margin-top: 20px; border-left: 5px solid #059669;">
+            <i>"Teknologi tidak berguna jika hanya menjadi pajangan akademis. Teknologi harus turun ke desa, menyentuh tangan petani, menaikkan taraf hidup mereka, sekaligus menyembuhkan bumi yang kita tinggali."</i> 
+            <br><br><b>— Muh. Armil Syam, S.T.</b>
         </div>
-    </section>
+        """, unsafe_allow_html=True)
+        
+    st.write("---")
+    st.markdown("### Tentang PT. Boyang Digital Nusantara")
+    st.write("""
+    Berpusat di Sulawesi Barat, perusahaan ini berfokus pada pengembangan *software*, analitik data, dan integrasi *Internet of Things (IoT)* untuk memecahkan masalah industri riil. **SCH-Hub** adalah salah satu portofolio unggulan yang menyatukan misi pelestarian lingkungan dengan pertumbuhan ekonomi mikro.
+    """)
 
-    <!-- Solution Section -->
-    <section id="solusi" class="py-20 bg-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center gap-12">
-                <div class="md:w-1/2">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Solusi Kami: SCH-Hub</h2>
-                    <p class="text-lg text-gray-600 mb-6">
-                        Strategic Coconut Hilirization Hub bertindak sebagai jembatan digital. Kami memetakan titik limbah secara geospasial dan menghubungkan pengepul lokal langsung dengan industri bio-energi.
-                    </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-start">
-                            <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 text-xl"></i>
-                            <div>
-                                <h4 class="font-bold text-gray-800">Menekan Biaya Transportasi</h4>
-                                <p class="text-sm text-gray-600">Memanfaatkan algoritma *routing* AI untuk efisiensi logistik biomassa hingga 30%.</p>
-                            </div>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 text-xl"></i>
-                            <div>
-                                <h4 class="font-bold text-gray-800">Sistem Transaksi Terintegrasi</h4>
-                                <p class="text-sm text-gray-600">Distribusi insentif langsung ke petani dan pengepul desa melalui E-Wallet/QRIS.</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <div class="md:w-1/2 bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
-                    <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 py-20">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line text-5xl mb-3"></i>
-                            <p class="font-medium">Prototipe Dashboard Streamlit</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
+# ==========================================
+# 5. STRUKTUR NAVIGASI SIDEBAR
+# ==========================================
+def main():
+    st.sidebar.markdown("""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #059669; font-weight: 800; font-size: 2rem; margin-bottom: 0;">SCH-Hub</h1>
+            <p style="color: #6b7280; font-size: 0.8rem;">by PT. Boyang Digital Nusantara</p>
         </div>
-    </section>
+    """, unsafe_allow_html=True)
+    
+    # Menu Navigasi
+    menu = st.sidebar.radio(
+        "Navigasi Platform",
+        ["🏠 Beranda & Visi Utama", "⚙️ Teknologi Geo-AI", "📊 Dampak Ekonomi & Karbon", "👨‍💼 Profil Founder & Tim"]
+    )
+    
+    st.sidebar.write("---")
+    st.sidebar.info("💡 **Aplikasi Interaktif:** Coba arahkan kursor pada peta atau grafik untuk melihat detail data.")
+    st.sidebar.write("© 2026 PT. Boyang Digital Nusantara")
+    
+    # Routing Halaman
+    if menu == "🏠 Beranda & Visi Utama":
+        page_beranda()
+    elif menu == "⚙️ Teknologi Geo-AI":
+        page_teknologi()
+    elif menu == "📊 Dampak Ekonomi & Karbon":
+        page_dampak()
+    elif menu == "👨‍💼 Profil Founder & Tim":
+        page_founder()
 
-    <!-- Team/Founder Section -->
-    <section class="py-20">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl font-bold text-gray-900 mb-10">Tim Pengembang</h2>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 inline-block text-left">
-                <div class="flex items-center gap-6">
-                    <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-3xl">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold text-gray-900">Muh. Armil Syam</h3>
-                        <p class="text-emerald-600 font-medium mb-2">Founder & Director</p>
-                        <p class="text-gray-600 text-sm">BNSP Certified Data Scientist & Web Developer.<br>Membangun inovasi dari Pandeglang hingga Sulawesi Barat.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-            <div class="mb-6 md:mb-0 text-center md:text-left">
-                <span class="font-bold text-2xl text-emerald-400">SCH-Hub</span>
-                <p class="text-gray-400 text-sm mt-2">Inisiatif inovasi iklim oleh PT. Boyang Digital Nusantara</p>
-            </div>
-            <div class="text-gray-400 text-sm">
-                &copy; 2026 PT. Boyang Digital Nusantara. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-</body>
-</html>
-"""
-
-# Render HTML di dalam Streamlit menggunakan components.html
-components.html(html_content, height=2500, scrolling=True)
+# ==========================================
+# 6. EKSEKUSI UTAMA
+# ==========================================
+if __name__ == "__main__":
+    main()
